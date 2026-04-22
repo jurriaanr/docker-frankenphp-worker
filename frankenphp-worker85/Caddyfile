@@ -1,0 +1,48 @@
+{
+	{$CADDY_GLOBAL_OPTIONS}
+
+	frankenphp
+
+	admin off
+	servers {
+		trusted_proxies static private_ranges
+	}
+}
+
+{$SERVER_NAME} {
+	root * {$FRANKENPHP_DOCUMENTROOT}
+
+	# Security headers + server hardening
+	header {
+		-Server
+		-X-Powered-By
+		X-Clacks-Overhead      "GNU Terry Pratchett"
+		X-Content-Type-Options "nosniff"
+		X-XSS-Protection       "1; mode=block"
+		X-Frame-Options        "DENY"
+		Referrer-Policy        "strict-origin"
+	}
+
+	encode zstd gzip
+
+	# Static asset caching
+	@favicon path *.ico
+	header @favicon Cache-Control "public, max-age=31536000"
+
+	@images path *.png *.jpg *.jpeg *.gif *.svg *.webp
+	header @images Cache-Control "public, max-age=2592000"
+
+	@assets path *.css *.js *.woff *.woff2 *.ttf *.otf *.eot
+	header @assets Cache-Control "public, max-age=2592000"
+
+	# Execute PHP in-process (no FPM, no FastCGI)
+	php_server
+
+	file_server
+
+	# Fallback when PHP execution errors upstream
+	handle_errors {
+		@5xx expression {err.status_code} >= 500
+		respond @5xx "Service temporarily unavailable" 503
+	}
+}
