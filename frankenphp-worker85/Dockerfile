@@ -13,7 +13,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PHP_SMTP_HOST=localhost \
     PHP_MAX_INPUT_VARS=1000 \
     FRANKENPHP_DOCUMENTROOT=/app/public \
-    FRANKENPHP_CONFIG="worker /app/public/index.php" \
+    FRANKENPHP_WORKER_FILE=/app/public/index.php \
+    FRANKENPHP_NUM_WORKERS=2 \
     SERVER_NAME=":80"
 
 # Locales

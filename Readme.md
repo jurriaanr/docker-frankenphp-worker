@@ -12,7 +12,7 @@ For the standard per-request image (safer default, compatible with any PHP app),
 
 Known compatible runtimes:
 
-- **Symfony** with the `runtime/frankenphp-symfony` package (Symfony 6.2+)
+- **Symfony 7.4+** — `symfony/runtime` supports FrankenPHP worker mode natively; no extra package needed
 - **Laravel Octane** (separate configuration)
 - Custom code using `frankenphp_handle_request()` in a `while` loop
 
@@ -26,7 +26,7 @@ Identical to `jurriaanr/frankenphp`:
 - Same locales, timezone, security headers, compression, caching
 - Composer 2, git, ssh-client, cron
 
-The only difference is the `FRANKENPHP_CONFIG` environment variable, which enables worker mode on `public/index.php`.
+The only difference is the Caddyfile: its global `frankenphp` block declares a `worker` on `public/index.php` and sets `FRANKENPHP_WORKER=1` in the worker's environment, which is what `symfony/runtime` checks to switch to its worker runner.
 
 ## Environment variables
 
@@ -34,11 +34,13 @@ Same as `jurriaanr/frankenphp`, plus:
 
 | Variable | Default | Description |
 |---|---|---|
-| `FRANKENPHP_CONFIG` | `worker /app/public/index.php` | Worker script path. Override to point at a different entry. |
+| `FRANKENPHP_WORKER_FILE` | `/app/public/index.php` | Worker script path. Override to point at a different entry. |
+| `FRANKENPHP_NUM_WORKERS` | `2` | Number of worker threads. |
+| `FRANKENPHP_CONFIG` | _(empty)_ | Extra directives inserted into the global `frankenphp { }` block (e.g. `num_threads 8`). |
 
 ## Usage
 
-For a Symfony app with Runtime:
+For a Symfony 7.4+ app:
 
 ```yaml
 services:
@@ -49,14 +51,10 @@ services:
     volumes:
       - .:/app
     environment:
-      APP_RUNTIME: Runtime\FrankenPhpSymfony\Runtime
+      FRANKENPHP_NUM_WORKERS: 4
 ```
 
-Install the Symfony runtime in your app:
-
-```bash
-composer require runtime/frankenphp-symfony
-```
+No `APP_RUNTIME` or extra package is needed: the stock `public/index.php` from Symfony Flex works as the worker script.
 
 ## Trade-offs
 
@@ -95,7 +93,7 @@ Or use the `Update-DockerImages.ps1` script:
 
 ## Testing locally
 
-Requires a Symfony app with `runtime/frankenphp-symfony` installed. A vanilla `index.php` won't work — that's by design for worker mode.
+Requires a Symfony 7.4+ app. A vanilla `index.php` won't work — that's by design for worker mode.
 
 Basic smoke test against a Symfony app:
 
@@ -107,9 +105,9 @@ curl    http://localhost/                    # Symfony renders
 curl http://localhost/_profiler              # Symfony profiler shows request time
 ```
 
-Worker mode dramatically reduces "bootstrap" time shown in the Symfony profiler — if you see numbers similar to standard mode, the runtime package isn't active.
+Worker mode dramatically reduces "bootstrap" time shown in the Symfony profiler — if you see numbers similar to standard mode, the worker runner isn't active (check that `symfony/runtime` is 7.4+).
 
 ## See also
 
 - [FrankenPHP worker mode docs](https://frankenphp.dev/docs/worker/)
-- [Symfony FrankenPHP runtime](https://github.com/php-runtime/frankenphp-symfony)
+- [Symfony Runtime component](https://symfony.com/doc/current/components/runtime.html)
