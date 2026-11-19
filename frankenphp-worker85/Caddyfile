@@ -1,7 +1,16 @@
 {
 	{$CADDY_GLOBAL_OPTIONS}
 
-	frankenphp
+	frankenphp {
+		# Boot the app once and keep it in memory. symfony/runtime (>=7.4) picks
+		# its FrankenPhpWorkerRunner when FRANKENPHP_WORKER is set in the worker env.
+		worker {
+			file {$FRANKENPHP_WORKER_FILE:/app/public/index.php}
+			num {$FRANKENPHP_NUM_WORKERS:2}
+			env FRANKENPHP_WORKER 1
+		}
+		{$FRANKENPHP_CONFIG}
+	}
 
 	admin off
 	servers {
